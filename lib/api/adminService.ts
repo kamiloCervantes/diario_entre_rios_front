@@ -97,6 +97,31 @@ export async function listBreakingNews(): Promise<BreakingNewsRow[]> {
   return data ?? []
 }
 
+// ─── Storage: imágenes de artículos ─────────────────────────────────────────
+
+// Sube un archivo al bucket público "article-images" y devuelve su URL
+// pública. El nombre se genera acá (no se usa el del archivo original) para
+// evitar colisiones y problemas con caracteres especiales.
+export async function uploadArticleImage(
+  file: File,
+  folder: 'covers' | 'authors'
+): Promise<string> {
+  await requireAdmin()
+  const supabase = await createClient()
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`
+
+  const { error } = await supabase.storage
+    .from('article-images')
+    .upload(path, file, { contentType: file.type || undefined })
+
+  if (error) throw new Error(`No se pudo subir la imagen: ${error.message}`)
+
+  const { data } = supabase.storage.from('article-images').getPublicUrl(path)
+  return data.publicUrl
+}
+
 // ─── Mutaciones de artículos ────────────────────────────────────────────────
 // La validación de FormData vive en app/admin/articulos/actions.ts; estas son
 // las operaciones de base de datos que esa Server Action orquesta.

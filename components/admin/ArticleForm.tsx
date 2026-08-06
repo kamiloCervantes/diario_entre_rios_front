@@ -29,6 +29,8 @@ export default function ArticleForm({ mode, article }: Props) {
           <input type="hidden" name="id" value={article.id} />
           <input type="hidden" name="old_slug" value={article.slug} />
           <input type="hidden" name="existing_published_at" value={article.published_at ?? ''} />
+          <input type="hidden" name="existing_image_url" value={article.image_url} />
+          <input type="hidden" name="existing_author_image_url" value={article.author_image_url ?? ''} />
         </>
       )}
 
@@ -63,8 +65,22 @@ export default function ArticleForm({ mode, article }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label className={labelClass} htmlFor="image_url">URL de imagen</label>
-          <input id="image_url" name="image_url" defaultValue={article?.image_url} required placeholder="https://..." className={inputClass} />
+          <label className={labelClass} htmlFor="image_file">Imagen de portada</label>
+          {article?.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={article.image_url} alt="" className="mb-2 h-24 w-40 rounded-lg object-cover" />
+          )}
+          <input
+            id="image_file"
+            name="image_file"
+            type="file"
+            accept="image/*"
+            required={mode === 'create'}
+            className={inputClass}
+          />
+          {mode === 'edit' && (
+            <p className="mt-1 text-xs text-slate-400">Dejar vacío para mantener la imagen actual.</p>
+          )}
         </div>
         <div>
           <label className={labelClass} htmlFor="category">Categoría</label>
@@ -83,8 +99,15 @@ export default function ArticleForm({ mode, article }: Props) {
           <input id="author_name" name="author_name" defaultValue={article?.author_name} required className={inputClass} />
         </div>
         <div>
-          <label className={labelClass} htmlFor="author_image_url">URL de foto del autor</label>
-          <input id="author_image_url" name="author_image_url" defaultValue={article?.author_image_url} placeholder="https://..." className={inputClass} />
+          <label className={labelClass} htmlFor="author_image_file">Foto del autor</label>
+          {article?.author_image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={article.author_image_url} alt="" className="mb-2 h-16 w-16 rounded-full object-cover" />
+          )}
+          <input id="author_image_file" name="author_image_file" type="file" accept="image/*" className={inputClass} />
+          {mode === 'edit' && (
+            <p className="mt-1 text-xs text-slate-400">Dejar vacío para mantener la foto actual.</p>
+          )}
         </div>
       </div>
 

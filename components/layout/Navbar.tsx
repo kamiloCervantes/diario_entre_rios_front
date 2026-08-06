@@ -30,10 +30,10 @@ export default function Navbar() {
               <Waves className="w-5 h-5 text-white" />
             </div>
             <div className="leading-tight">
-              <span className="block text-base font-black text-slate-900 tracking-tight">
+              <span className="block text-base font-black text-slate-900 tracking-tight uppercase">
                 Diario<span className="text-verde-600"> Entre Ríos</span>
               </span>
-              <span className="block text-[9px] text-slate-400 tracking-widest uppercase">
+              <span className="block text-[9px] text-slate-400 tracking-[0.18em] lowercase">
                 Periodismo Independiente
               </span>
             </div>
