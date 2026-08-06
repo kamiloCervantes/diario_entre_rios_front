@@ -1,16 +1,4 @@
-export type Category =
-  | 'Local'
-  | 'Nacional'
-  | 'Policial'
-  | 'Deportes'
-  | 'Cultura'
-  | 'Economía'
-  | 'Tecnología'
-  | 'Salud'
-  | 'Ambiente'
-  | 'Empleo'
-  | 'Ciencia'
-  | 'Opinión'
+export type Category = 'Noticias' | 'Historias' | 'Investigación' | 'Opinión'
 
 export interface Author {
   name: string
@@ -45,18 +33,6 @@ export interface TrendingItem {
   title: string
   publishedAt: string
   rank: number
-}
-
-export interface MostReadItem {
-  id: string
-  slug: string
-  title: string
-  category: Category
-  categoryColor: string
-  image: string
-  excerpt: string
-  author: string
-  publishedAt: string
 }
 
 // API service shape for future replacement

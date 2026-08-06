@@ -1,73 +1,137 @@
 /**
  * newsService.ts
  * ─────────────────────────────────────────────────────────────────────────────
- * Abstraction layer between components and data sources.
- * Currently returns mock data; swap the implementations below to call real APIs.
- *
- * Example future replacement for getArticles():
- *   const res = await fetch('https://api.diarioentrarios.com/v1/articles')
- *   return res.json()
+ * Capa de lectura pública (solo notas publicadas). Consultado por los Server
+ * Components de app/page.tsx y app/article/[slug]/page.tsx — mantiene las
+ * mismas firmas/formas de retorno que antes tenía con datos mock.
+ * Las lecturas que necesita el panel admin (borradores incluidos, mutaciones)
+ * viven en lib/api/adminService.ts.
  */
 
-import {
-  articles,
-  featuredArticle,
-  localArticles,
-  nacionalArticles,
-  cronicasArticles,
-  masLeidasArticles,
-  trendingItems,
-  breakingNewsItems,
-  getArticleBySlug,
-} from '@/lib/data/articles'
+import { createClient } from '@/lib/supabase/server'
+import { mapArticleRow, mapBreakingNewsRow, mapTrendingRow } from '@/lib/supabase/mappers'
+import type { HomepageSection } from '@/lib/supabase/database.types'
 
 import type { Article, BreakingNewsItem, TrendingItem } from '@/types/news'
 
 // ─── Articles ─────────────────────────────────────────────────────────────────
 
 export async function getAllArticles(): Promise<Article[]> {
-  // TODO: replace with → await fetch('/api/articles').then(r => r.json())
-  return articles
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  return (data ?? []).map(mapArticleRow)
 }
 
 export async function getFeaturedArticle(): Promise<Article> {
-  return featuredArticle
+  const supabase = await createClient()
+
+  const { data: destacada } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .eq('homepage_section', 'destacada')
+    .limit(1)
+    .maybeSingle()
+
+  if (destacada) return mapArticleRow(destacada)
+
+  // Fallback: si ningún admin marcó todavía una nota como destacada, mostrar
+  // la más reciente publicada para que la home nunca se quede sin hero.
+  const { data: fallback } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!fallback) {
+    throw new Error('No hay notas publicadas todavía.')
+  }
+
+  return mapArticleRow(fallback)
+}
+
+async function getArticlesBySection(section: HomepageSection): Promise<Article[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .eq('homepage_section', section)
+    .order('published_at', { ascending: false })
+
+  return (data ?? []).map(mapArticleRow)
 }
 
 export async function getLocalArticles(): Promise<Article[]> {
-  return localArticles
+  return getArticlesBySection('local')
 }
 
 export async function getNacionalArticles(): Promise<Article[]> {
-  return nacionalArticles
+  return getArticlesBySection('nacional')
 }
 
 export async function getCronicasArticles(): Promise<Article[]> {
-  return cronicasArticles
+  return getArticlesBySection('cronicas')
 }
 
 export async function getMostReadArticles(): Promise<Article[]> {
-  return masLeidasArticles
+  return getArticlesBySection('mas_leidas')
 }
 
 export async function getArticle(slug: string): Promise<Article | undefined> {
-  // TODO: replace with → await fetch(`/api/articles/${slug}`).then(r => r.json())
-  return getArticleBySlug(slug)
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .maybeSingle()
+
+  return data ? mapArticleRow(data) : undefined
 }
 
 export async function getRelatedArticles(currentSlug: string, limit = 3): Promise<Article[]> {
-  const all = articles.filter((a) => a.slug !== currentSlug)
-  return all.sort(() => 0.5 - Math.random()).slice(0, limit)
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .neq('slug', currentSlug)
+    .order('published_at', { ascending: false })
+    .limit(limit)
+
+  return (data ?? []).map(mapArticleRow)
 }
 
 // ─── Breaking news & trending ─────────────────────────────────────────────────
 
 export async function getBreakingNews(): Promise<BreakingNewsItem[]> {
-  // TODO: replace with → await fetch('/api/breaking-news').then(r => r.json())
-  return breakingNewsItems
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('breaking_news')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+
+  return (data ?? []).map(mapBreakingNewsRow)
 }
 
 export async function getTrending(): Promise<TrendingItem[]> {
-  // TODO: replace with → await fetch('/api/trending').then(r => r.json())
-  return trendingItems
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('status', 'published')
+    .not('trending_rank', 'is', null)
+    .order('trending_rank', { ascending: true })
+    .limit(5)
+
+  return (data ?? []).map((row) => mapTrendingRow(row, row.trending_rank!))
 }

@@ -2,13 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Sin subida de imágenes: el admin pega una URL de cualquier sitio https.
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
-        pathname: '/**',
+        hostname: '**',
       },
     ],
+  },
+  experimental: {
+    authInterrupts: true,
   },
 };
 

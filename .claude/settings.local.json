@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wsl.exe -d Ubuntu-24.04 -- bash -lc \"cd ~/external/diario_entre_rios_next && sed -n '1,90p' node_modules/@supabase/supabase-js/src/SupabaseClient.ts\")",
+      "Bash(wsl.exe -d *)"
+    ]
+  }
+}
