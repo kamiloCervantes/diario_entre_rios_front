@@ -33,7 +33,7 @@ export default function Navbar() {
               <span className="block text-base font-black text-slate-900 tracking-tight uppercase">
                 Diario<span className="text-verde-600"> Entre Ríos</span>
               </span>
-              <span className="block text-[9px] text-slate-400 tracking-[0.18em] lowercase">
+              <span className="block text-[9px] text-slate-400 tracking-[0.18em]">
                 Periodismo Independiente
               </span>
             </div>
