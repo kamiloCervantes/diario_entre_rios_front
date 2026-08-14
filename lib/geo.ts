@@ -3,8 +3,9 @@
  * (Route Handler /api/track) para no depender de CORS ni exponer
  * llamadas externas en el navegador.
  *
- * Proveedores gratuitos sin API key, con reintento encadenado y
- * timeout corto para no degradar la respuesta del tracking.
+ * Proveedores gratuitos sin API key, con reintento encadenado, timeout
+ * corto y caché en memoria por IP para que solo la primera solicitud
+ * de cada visitante pague la latencia del lookup.
  */
 
 import 'server-only'
@@ -25,10 +26,40 @@ const PROVIDERS: GeoProvider[] = [
   },
 ]
 
-const TIMEOUT_MS = 2500
+const TIMEOUT_MS = 1200
 const MAX_COUNTRY_LENGTH = 100
+const CACHE_TTL_MS = 10 * 60 * 1000
+const FALLBACK_TTL_MS = 60 * 1000
+const MAX_CACHE_ENTRIES = 500
 
-export async function resolveCountry(): Promise<string> {
+type CacheEntry = { country: string; expiresAt: number }
+
+const cache = new Map<string, CacheEntry>()
+
+function getCached(ip: string): string | undefined {
+  const entry = cache.get(ip)
+  if (!entry) return undefined
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(ip)
+    return undefined
+  }
+  return entry.country
+}
+
+function setCached(ip: string, country: string, ttlMs = CACHE_TTL_MS) {
+  if (cache.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = cache.keys().next().value
+    if (oldestKey !== undefined) cache.delete(oldestKey)
+  }
+  cache.set(ip, { country, expiresAt: Date.now() + ttlMs })
+}
+
+export async function resolveCountry(ip?: string | null): Promise<string> {
+  const cacheKey = ip?.trim() || 'default'
+
+  const cached = getCached(cacheKey)
+  if (cached) return cached
+
   for (const provider of PROVIDERS) {
     try {
       const res = await fetch(provider.url, {
@@ -40,12 +71,17 @@ export async function resolveCountry(): Promise<string> {
       const country = provider.pick(data)
 
       if (typeof country === 'string' && country.trim()) {
-        return country.trim().slice(0, MAX_COUNTRY_LENGTH)
+        const normalized = country.trim().slice(0, MAX_COUNTRY_LENGTH)
+        setCached(cacheKey, normalized)
+        return normalized
       }
     } catch {
       // Proveedor no disponible o timeout: probar el siguiente
     }
   }
 
+  // Los proveedores fallaron: cachear el fallback por un período corto
+  // para no repetir los timeouts en cada visita.
+  setCached(cacheKey, 'Desconocido', FALLBACK_TTL_MS)
   return 'Desconocido'
 }
