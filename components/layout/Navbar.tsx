@@ -50,6 +50,12 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+            <Link
+              href="/dashboard"
+              className="px-3 py-1.5 text-sm font-medium text-verde-700 hover:text-verde-600 hover:bg-verde-50 rounded-lg transition-colors duration-200"
+            >
+              Analíticas
+            </Link>
           </div>
 
           {/* Right controls */}
@@ -111,6 +117,13 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
+          <Link
+            href="/dashboard"
+            onClick={() => setMenuOpen(false)}
+            className="px-3 py-2.5 text-sm font-medium text-verde-700 hover:text-verde-600 hover:bg-verde-50 rounded-lg transition-colors"
+          >
+            Analíticas
+          </Link>
           <Link
             href="#newsletter"
             onClick={() => setMenuOpen(false)}
