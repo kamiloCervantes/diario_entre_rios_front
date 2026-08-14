@@ -85,6 +85,17 @@ export type ProfileRow = {
   created_at: string
 }
 
+export type ArticleViewRow = {
+  id: number
+  article_id: string
+  country: string | null
+  user_agent: string | null
+  created_at: string
+}
+
+export type ArticleViewInsert = Pick<ArticleViewRow, 'article_id'> &
+  Partial<Pick<ArticleViewRow, 'country' | 'user_agent'>>
+
 export type Database = {
   public: {
     Tables: {
@@ -104,6 +115,12 @@ export type Database = {
         Row: ProfileRow
         Insert: Pick<ProfileRow, 'id'> & Partial<Pick<ProfileRow, 'role' | 'created_at'>>
         Update: Partial<Pick<ProfileRow, 'role'>>
+        Relationships: []
+      }
+      article_views: {
+        Row: ArticleViewRow
+        Insert: ArticleViewInsert
+        Update: Partial<ArticleViewInsert>
         Relationships: []
       }
     }

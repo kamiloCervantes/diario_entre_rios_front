@@ -11,15 +11,17 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import CategoryTag from '@/components/ui/CategoryTag'
 import NewsCard from '@/components/ui/NewsCard'
+import TrackView from '@/components/analytics/TrackView'
 
 import { getArticle, getRelatedArticles, getBreakingNews } from '@/lib/api/newsService'
 
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await getArticle(params.slug)
+  const { slug } = await params
+  const article = await getArticle(slug)
   if (!article) return { title: 'Artículo no encontrado' }
 
   return {
@@ -34,17 +36,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
+  const { slug } = await params
   const [article, breaking] = await Promise.all([
-    getArticle(params.slug),
+    getArticle(slug),
     getBreakingNews(),
   ])
 
   if (!article) notFound()
 
-  const related = await getRelatedArticles(params.slug)
+  const related = await getRelatedArticles(slug)
 
   return (
     <div className="min-h-screen flex flex-col">
+      <TrackView articleId={article.id} />
       <TopBar />
       <BreakingTicker items={breaking} />
       <Navbar />
