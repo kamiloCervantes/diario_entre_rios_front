@@ -73,7 +73,7 @@ async function parseArticleForm(formData: FormData, existingPublishedAt: string 
   const rawRank = String(formData.get('trending_rank') ?? '')
   const trendingRank = rawRank ? Number(rawRank) : null
 
-  const commentsCount = Number(formData.get('comments_count') ?? 0) || 0
+  const commentsCount = Number(formData.get('existing_comments_count') ?? 0) || 0
 
   const publishedAt =
     status === 'published' ? existingPublishedAt ?? new Date().toISOString() : existingPublishedAt

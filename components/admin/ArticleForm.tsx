@@ -1,10 +1,11 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 
 import { CATEGORIES, HOMEPAGE_SECTIONS } from '@/lib/constants/categories'
 import { createArticleAction, updateArticleAction, type ArticleFormState } from '@/app/admin/(protected)/articulos/actions'
 import type { ArticleRow } from '@/lib/supabase/database.types'
+import CKEditor2 from '@/components/admin/ckeditor2'
 
 const initialState: ArticleFormState = {}
 
@@ -31,6 +32,7 @@ export default function ArticleForm({ mode, article }: Props) {
           <input type="hidden" name="existing_published_at" value={article.published_at ?? ''} />
           <input type="hidden" name="existing_image_url" value={article.image_url} />
           <input type="hidden" name="existing_author_image_url" value={article.author_image_url ?? ''} />
+          <input type="hidden" name="existing_comments_count" value={article.comments_count ?? 0} />
         </>
       )}
 
@@ -58,9 +60,9 @@ export default function ArticleForm({ mode, article }: Props) {
 
       <div>
         <label className={labelClass} htmlFor="body">
-          Cuerpo <span className="text-slate-400 font-normal">(HTML simple: &lt;p&gt;, &lt;blockquote&gt;)</span>
+          Cuerpo <span className="text-slate-400 font-normal">(Editor de texto enriquecido)</span>
         </label>
-        <textarea id="body" name="body" defaultValue={article?.body} rows={10} className={`${inputClass} font-mono text-xs`} />
+        <CKEditor2 id="body" name="body" defaultValue={article?.body ?? ''} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -139,18 +141,6 @@ export default function ArticleForm({ mode, article }: Props) {
         </div>
       </div>
 
-      <div>
-        <label className={labelClass} htmlFor="comments_count">Cantidad de comentarios</label>
-        <input
-          id="comments_count"
-          name="comments_count"
-          type="number"
-          min={0}
-          defaultValue={article?.comments_count ?? 0}
-          className={`${inputClass} max-w-[10rem]`}
-        />
-      </div>
-
       {state?.error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{state.error}</p>
       )}
@@ -158,7 +148,7 @@ export default function ArticleForm({ mode, article }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-verde-600 text-white px-6 py-2.5 text-sm font-medium hover:bg-verde-700 disabled:opacity-60"
+        className="rounded-full bg-verde-600 text-white px-6 py-2.5 text-sm font-medium hover:bg-verde-700 disabled:opacity-60 cursor-pointer"
       >
         {pending ? 'Guardando…' : mode === 'create' ? 'Crear nota' : 'Guardar cambios'}
       </button>
