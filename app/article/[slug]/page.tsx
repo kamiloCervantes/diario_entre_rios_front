@@ -1,8 +1,7 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Clock, MessageCircle, ArrowLeft, Link2, Share2, Bookmark, Printer } from 'lucide-react'
-import { FiFacebook, FiTwitter } from 'react-icons/fi'
+import { Clock, MessageCircle, ArrowLeft } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import TopBar from '@/components/layout/TopBar'
@@ -11,15 +10,18 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import CategoryTag from '@/components/ui/CategoryTag'
 import NewsCard from '@/components/ui/NewsCard'
+import ArticleShareBar from '@/components/ui/ArticleShareBar'
+import WhatsAppShareButton from '@/components/ui/WhatsAppShareButton'
 
 import { getArticle, getRelatedArticles, getBreakingNews } from '@/lib/api/newsService'
 
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await getArticle(params.slug)
+  const { slug } = await params
+  const article = await getArticle(slug)
   if (!article) return { title: 'Artículo no encontrado' }
 
   return {
@@ -34,14 +36,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
+  const { slug } = await params
   const [article, breaking] = await Promise.all([
-    getArticle(params.slug),
+    getArticle(slug),
     getBreakingNews(),
   ])
 
   if (!article) notFound()
 
-  const related = await getRelatedArticles(params.slug)
+  const related = await getRelatedArticles(slug)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,10 +62,10 @@ export default async function ArticlePage({ params }: Props) {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 lg:p-16">
             <CategoryTag label={article.category} colorClass={article.categoryColor} className="mb-3" />
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white leading-tight tracking-tight max-w-4xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight tracking-tight max-w-4xl">
               {article.title}
             </h1>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5 text-sm text-slate-300">
@@ -84,15 +87,24 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </div>
 
-        {/* Back button */}
-        <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-6">
+        {/* Back button & quick WhatsApp share */}
+        <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-6 flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-verde-600 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-verde-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver al inicio
+            <span>Volver al inicio</span>
           </Link>
+
+          <WhatsAppShareButton
+            slug={article.slug}
+            title={article.title}
+            variant="button"
+            size="sm"
+            label="Compartir en WhatsApp"
+            className="shadow-sm"
+          />
         </div>
 
         {/* Article body */}
@@ -107,36 +119,18 @@ export default async function ArticlePage({ params }: Props) {
           />
 
           {/* Share / save */}
-          <div className="mt-12 pt-8 border-t border-slate-200">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-700">Compartir:</span>
-                {[
-                  { icon: FiFacebook, bg: 'bg-blue-50 hover:bg-blue-100 text-blue-600' },
-                  { icon: FiTwitter,  bg: 'bg-sky-50 hover:bg-sky-100 text-sky-500' },
-                  { icon: Link2,    bg: 'bg-slate-100 hover:bg-slate-200 text-slate-600' },
-                  { icon: Share2,   bg: 'bg-green-50 hover:bg-green-100 text-green-600' },
-                ].map(({ icon: Icon, bg }, i) => (
-                  <button key={i} className={`w-9 h-9 ${bg} rounded-full flex items-center justify-center transition-colors`}>
-                    <Icon className="w-4 h-4" />
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-                  <Bookmark className="w-4 h-4" /> Guardar
-                </button>
-                <button className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 rounded-full text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-                  <Printer className="w-4 h-4" /> Imprimir
-                </button>
-              </div>
-            </div>
+          <div className="mt-12">
+            <ArticleShareBar
+              slug={article.slug}
+              title={article.title}
+              subtitle={article.subtitle}
+            />
           </div>
 
           {/* Related */}
           {related.length > 0 && (
-            <div className="mt-12">
-              <h3 className="text-xl font-bold text-slate-900 mb-5">Noticias relacionadas</h3>
+            <div className="mt-14 pt-8 border-t border-slate-200">
+              <h3 className="text-xl font-bold text-slate-900 mb-6">Noticias relacionadas</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 {related.map((rel) => (
                   <Link key={rel.id} href={`/article/${rel.slug}`}>

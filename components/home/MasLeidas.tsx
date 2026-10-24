@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef } from 'react'
 import Image from 'next/image'
@@ -6,6 +6,7 @@ import { Flame, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Article } from '@/types/news'
 import CategoryTag from '@/components/ui/CategoryTag'
 import SectionHeader from '@/components/ui/SectionHeader'
+import WhatsAppShareButton from '@/components/ui/WhatsAppShareButton'
 
 interface MasLeidasProps {
   articles: Article[]
@@ -28,7 +29,7 @@ export default function MasLeidas({ articles, onArticleClick }: MasLeidasProps) 
             <button
               id="scrollLeft"
               onClick={() => scroll('left')}
-              className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-verde-50 hover:text-verde-600 transition-colors shadow-sm"
+              className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-verde-50 hover:text-verde-600 transition-colors shadow-sm cursor-pointer"
               aria-label="Scroll izquierda"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -36,7 +37,7 @@ export default function MasLeidas({ articles, onArticleClick }: MasLeidasProps) 
             <button
               id="scrollRight"
               onClick={() => scroll('right')}
-              className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-verde-50 hover:text-verde-600 transition-colors shadow-sm"
+              className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-verde-50 hover:text-verde-600 transition-colors shadow-sm cursor-pointer"
               aria-label="Scroll derecha"
             >
               <ChevronRight className="w-4 h-4" />
@@ -52,36 +53,60 @@ export default function MasLeidas({ articles, onArticleClick }: MasLeidasProps) 
           {articles.map((article, i) => (
             <div
               key={article.id}
-              className="shrink-0 w-72 sm:w-80 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group"
+              className="shrink-0 w-72 sm:w-80 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group flex flex-col justify-between"
               onClick={() => onArticleClick(article)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && onArticleClick(article)}
             >
-              <div className="relative h-44 overflow-hidden">
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  className="news-img object-cover transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                {/* Rank badge */}
-                <div className="absolute top-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <span className="text-sm font-black text-slate-900">{i + 1}</span>
+              <div>
+                <div className="relative h-44 overflow-hidden">
+                  <Image
+                    src={article.image}
+                    alt={article.title}
+                    fill
+                    className="news-img object-cover transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  {/* Rank badge */}
+                  <div className="absolute top-3 left-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xs">
+                    <span className="text-sm font-black text-slate-900">{i + 1}</span>
+                  </div>
+                  {/* WhatsApp quick share */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <WhatsAppShareButton
+                      slug={article.slug}
+                      title={article.title}
+                      size="sm"
+                      variant="icon"
+                      className="bg-white/90 hover:bg-[#25D366] text-[#25D366] hover:text-white shadow-sm"
+                    />
+                  </div>
+                  <div className="absolute bottom-3 left-3">
+                    <CategoryTag label={article.category} colorClass={article.categoryColor} />
+                  </div>
                 </div>
-                <div className="absolute bottom-3 left-3">
-                  <CategoryTag label={article.category} colorClass={article.categoryColor} />
+                <div className="p-4 pb-2">
+                  <h4 className="news-title text-sm font-bold leading-snug line-clamp-3 transition-colors duration-300">
+                    {article.title}
+                  </h4>
                 </div>
               </div>
-              <div className="p-4">
-                <h4 className="news-title text-sm font-bold leading-snug line-clamp-3 transition-colors duration-300">
-                  {article.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
-                  <span>{article.author.name}</span>
-                  <span>•</span>
-                  <span>{article.publishedAt}</span>
+
+              <div className="p-4 pt-0">
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="truncate">{article.author.name}</span>
+                    <span>•</span>
+                    <span className="shrink-0">{article.publishedAt}</span>
+                  </div>
+                  <WhatsAppShareButton
+                    slug={article.slug}
+                    title={article.title}
+                    size="sm"
+                    variant="badge"
+                    label="WhatsApp"
+                  />
                 </div>
               </div>
             </div>
